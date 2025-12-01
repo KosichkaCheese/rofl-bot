@@ -1,17 +1,22 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"log"
+	"rofl-bot/config"
+	_ "rofl-bot/docs"
+	"rofl-bot/router"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
-	router := gin.Default()
+	log.Println("Starting alena rofls ...")
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "я родился",
-		})
-	})
+	config.InitDB()
+	_ = config.DB
 
-	router.Run(":8000")
+	r := router.SetupRouter()
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.Run(":8000")
 }
