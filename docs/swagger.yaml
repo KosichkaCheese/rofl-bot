@@ -1,0 +1,119 @@
+info:
+  contact: {}
+paths:
+  /alena-rofl/:
+    get:
+      description: Проверяет, жив ли сервер
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Проверка жизнеспособности сервера
+  /alena-rofl/auth:
+    post:
+      consumes:
+      - application/json
+      description: Проверяет initData и выдаёт access + refresh токены
+      parameters:
+      - description: Init Data
+        in: body
+        name: InitData
+        required: true
+        schema:
+          properties:
+            init_data:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Авторизация через Telegram
+      tags:
+      - auth
+  /alena-rofl/refresh:
+    post:
+      consumes:
+      - application/json
+      description: После истечения access токена использовать это. принимает refresh
+        токен, отдает новый access. Пока не работает!!
+      parameters:
+      - description: Refresh Token
+        in: body
+        name: refresh_token
+        required: true
+        schema:
+          properties:
+            refresh_token:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновление токена
+      tags:
+      - auth
+  /alena-rofl/user_check:
+    get:
+      description: Доступ будет только при успешной авторизации
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Тест авторизации
+      tags:
+      - auth
+swagger: "2.0"
