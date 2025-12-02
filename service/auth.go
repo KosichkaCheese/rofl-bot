@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+
 	"encoding/hex"
 	"errors"
 	"net/url"
@@ -36,29 +37,29 @@ func VerifyTG(InitData string) (map[string]string, error) {
 	}
 	values.Del("hash")
 
-	keys := make([]string, len(values))
+	keys := make([]string, 0, len(values))
 	for k := range values {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	data := make([]string, len(keys))
+	data := make([]string, 0, len(keys))
 	for _, k := range keys {
 		data = append(data, k+"="+values.Get(k))
 	}
+
 	data_check_string := strings.Join(data, "\n")
-	secret := sha256.Sum256([]byte(BOT_TOKEN))
+	secretKey := hmac.New(sha256.New, []byte("WebAppData"))
+	secretKey.Write([]byte(BOT_TOKEN))
+	secret := secretKey.Sum(nil)
 
-	mac := hmac.New(sha256.New, secret[:])
+	mac := hmac.New(sha256.New, secret)
 	mac.Write([]byte(data_check_string))
-	expected := mac.Sum(nil)
 
-	recieved, err := hex.DecodeString(hash)
-	if err != nil {
-		return nil, err
-	}
+	expected := hex.EncodeToString(mac.Sum(nil))
+	recieved := hash
 
-	if !hmac.Equal(expected, recieved) {
+	if !hmac.Equal([]byte(expected), []byte(recieved)) {
 		return nil, errors.New("hash is invalid")
 	}
 
