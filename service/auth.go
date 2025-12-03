@@ -3,6 +3,10 @@ package service
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"rofl-bot/config"
+
+	// "log"
+	"os"
 
 	"encoding/hex"
 	"errors"
@@ -16,12 +20,17 @@ import (
 	"github.com/google/uuid"
 )
 
-const BOT_TOKEN = "8476710845:AAGm2wxJRCuHS_3nmVqqbzadp88aQVU3nTQ"
+type AuthService struct {
+	cfg *config.Config
+}
 
-// var jwtSecret = []byte(os.Getenv("JWT_SECRET")) //на проде поставить в env
-var jwtSecret = "crazy0little0alena"
+func NewAuthService(cfg *config.Config) *AuthService {
+	return &AuthService{cfg: cfg}
+}
 
-func VerifyTG(InitData string) (map[string]string, error) {
+func (a *AuthService) VerifyTG(InitData string) (map[string]string, error) {
+	var BOT_TOKEN = os.Getenv("BOT_TOKEN")
+
 	if InitData == "" {
 		return nil, errors.New("InitData is empty")
 	}
@@ -71,7 +80,9 @@ func VerifyTG(InitData string) (map[string]string, error) {
 	return res, nil
 }
 
-func GenerateAccessToken(userID string) (string, error) {
+func (a *AuthService) GenerateAccessToken(userID string) (string, error) {
+	var jwtSecret = os.Getenv("JWT_SECRET")
+
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		// "exp":     time.Now().Add(time.Hour * 24).Unix(),
@@ -87,7 +98,7 @@ func GenerateAccessToken(userID string) (string, error) {
 	return tokenString, nil
 }
 
-func GenerateRefreshToken() (string, error) {
+func (a *AuthService) GenerateRefreshToken() (string, error) {
 	token := uuid.New().String()
 	//записать в бд
 	return token, nil
@@ -95,6 +106,8 @@ func GenerateRefreshToken() (string, error) {
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var jwtSecret = os.Getenv("JWT_SECRET")
+
 		auth := c.GetHeader("Authorization")
 		if auth == "" || !strings.HasPrefix(auth, "Bearer ") {
 			c.JSON(401, gin.H{"error": "Unauthorized"})
@@ -119,84 +132,4 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
-}
-
-// @Summary Авторизация через Telegram
-// @Description Проверяет initData и выдаёт access + refresh токены
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param InitData body object{init_data=string} true "Init Data"
-// @Success 200 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /alena-rofl/auth [post]
-func Auth(c *gin.Context) {
-	var body struct {
-		InitData string `json:"init_data"`
-	}
-	c.BindJSON(&body)
-
-	data, err := VerifyTG(body.InitData)
-	if err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
-	userID := data["user_id"]
-	accessToken, err := GenerateAccessToken(userID)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	refreshToken, err := GenerateRefreshToken()
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, gin.H{
-		"access_token":  accessToken,
-		"refresh_token": refreshToken,
-		"expires_in":    180,
-	})
-}
-
-// @Summary Обновление токена
-// @Description После истечения access токена использовать это. принимает refresh токен, отдает новый access. Пока не работает!!
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param refresh_token body object{refresh_token=string} true "Refresh Token"
-// @Success 200 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Failure 500 {object} map[string]string
-// @Router /alena-rofl/refresh [post]
-func Refresh(c *gin.Context) {
-	var body struct {
-		RefreshToken string `json:"refresh_token"`
-	}
-	c.BindJSON(&body)
-
-	var userID string
-	var expires time.Time
-
-	//вытащить из бд
-
-	if time.Now().After(expires) {
-		c.JSON(401, gin.H{"error": "refresh token expired"})
-		return
-	}
-
-	accessToken, err := GenerateAccessToken(userID)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"access_token":  accessToken,
-		"refresh_token": body.RefreshToken,
-		"expires_in":    180,
-	})
-
 }
