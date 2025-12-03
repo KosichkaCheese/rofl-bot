@@ -2,8 +2,7 @@ package config
 
 import (
 	"os"
-
-	"github.com/joho/godotenv"
+	// "github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -13,10 +12,10 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	config := &Config{
 		DB_URL:     os.Getenv("DATABASE_URL"),
