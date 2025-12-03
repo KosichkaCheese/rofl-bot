@@ -4,6 +4,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
+	"rofl-bot/controller"
 	"rofl-bot/service"
 )
 
@@ -38,15 +39,15 @@ func UserCheck(c *gin.Context) {
 	})
 }
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(authCtrl *controller.AuthCtrl) *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.Default()) //потом поставить middleware
 	api := router.Group("/alena-rofl")
 	{
 		api.GET("/", HealthCheck)
 		api.GET("/user_check", service.AuthMiddleware(), UserCheck)
-		api.POST("/auth", service.Auth)
-		api.POST("/refresh", service.Refresh)
+		api.POST("/auth", authCtrl.Auth)
+		api.POST("/refresh", authCtrl.Refresh)
 	}
 
 	return router
