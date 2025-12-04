@@ -4,9 +4,11 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"rofl-bot/config"
+	"rofl-bot/domain"
+	"rofl-bot/repository"
 
 	// "log"
-	"os"
+	// "os"
 
 	"encoding/hex"
 	"errors"
@@ -18,18 +20,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type AuthService struct {
-	cfg *config.Config
+	cfg  *config.Config
+	repo *repository.AuthRep
 }
 
-func NewAuthService(cfg *config.Config) *AuthService {
-	return &AuthService{cfg: cfg}
+func NewAuthService(cfg *config.Config, repo *repository.AuthRep) *AuthService {
+	return &AuthService{cfg: cfg, repo: repo}
 }
 
 func (a *AuthService) VerifyTG(InitData string) (map[string]string, error) {
-	var BOT_TOKEN = os.Getenv("BOT_TOKEN")
+	var BOT_TOKEN = a.cfg.BOT_TOKEN
 
 	if InitData == "" {
 		return nil, errors.New("InitData is empty")
@@ -80,11 +84,12 @@ func (a *AuthService) VerifyTG(InitData string) (map[string]string, error) {
 	return res, nil
 }
 
-func (a *AuthService) GenerateAccessToken(userID string) (string, error) {
-	var jwtSecret = os.Getenv("JWT_SECRET")
+func (a *AuthService) GenerateAccessToken(userID uint, username string) (string, error) {
+	var jwtSecret = a.cfg.JWT_SECRET
 
 	claims := jwt.MapClaims{
-		"user_id": userID,
+		"user_id":  userID,
+		"username": username,
 		// "exp":     time.Now().Add(time.Hour * 24).Unix(),
 		"exp": time.Now().Add(time.Minute * 3).Unix(), //для тестов
 	}
@@ -98,19 +103,76 @@ func (a *AuthService) GenerateAccessToken(userID string) (string, error) {
 	return tokenString, nil
 }
 
-func (a *AuthService) GenerateRefreshToken() (string, error) {
+func (a *AuthService) CheckRefreshToken(refresh string) (bool, error) {
+	mac := hmac.New(sha256.New, []byte(a.cfg.JWT_SECRET))
+	mac.Write([]byte(refresh))
+	hash := hex.EncodeToString(mac.Sum(nil))
+
+	token, err := a.repo.GetToken(hash)
+	if err != nil {
+		return false, err
+	}
+
+	if token.Revoked {
+		err := a.repo.DeleteToken(hash)
+		if err != nil {
+			return false, err
+		}
+		return false, errors.New("token is revoked")
+	}
+
+	if token.ExpiresIn.Before(time.Now()) {
+		err := a.repo.DeleteToken(hash)
+		if err != nil {
+			return false, err
+		}
+		return false, errors.New("token is expired")
+	}
+
+	return true, nil
+}
+
+func (a *AuthService) GenerateRefreshToken(userID uint, username string) (string, error) {
 	token := uuid.New().String()
-	//записать в бд
+
+	hash := hmac.New(sha256.New, []byte(a.cfg.JWT_SECRET))
+	hash.Write([]byte(token))
+
+	tokenObj := domain.Token{
+		Refresh:   hex.EncodeToString(hash.Sum(nil)),
+		UserId:    userID,
+		Revoked:   false,
+		ExpiresIn: time.Now().Add(time.Minute * 10)}
+
+	_, err := a.repo.GetTokenByUserId(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			if err := a.repo.CreateToken(&tokenObj, username); err != nil {
+				return "", err
+			}
+		} else {
+			return "", err
+		}
+	} else {
+		if err := a.repo.UpdateToken(userID, &tokenObj); err != nil {
+			return "", err
+		}
+	}
+
 	return token, nil
 }
 
-func AuthMiddleware() gin.HandlerFunc {
+func (a *AuthService) ClearTokens(userID uint) error {
+	return a.repo.DeleteTokensByUserId(userID)
+}
+
+func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var jwtSecret = os.Getenv("JWT_SECRET")
+		jwtSecret := []byte(cfg.JWT_SECRET)
 
 		auth := c.GetHeader("Authorization")
 		if auth == "" || !strings.HasPrefix(auth, "Bearer ") {
-			c.JSON(401, gin.H{"error": "Unauthorized"})
+			c.JSON(401, domain.ErrorResponse{Error: "Unauthorized"})
 			c.Abort()
 			return
 		}
@@ -122,13 +184,28 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(401, gin.H{"error": "Unauthorized"})
+			c.JSON(401, domain.ErrorResponse{Error: "Unauthorized"})
 			c.Abort()
 			return
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
+
+		expTime, err := claims.GetExpirationTime()
+		if err != nil {
+			c.JSON(401, domain.ErrorResponse{Error: "Invalid token expiration time"})
+			c.Abort()
+			return
+		}
+
+		if time.Now().After(expTime.Time) {
+			c.JSON(401, domain.ErrorResponse{Error: "Access token expired"})
+			c.Abort()
+			return
+		}
+
 		c.Set("user_id", claims["user_id"])
+		c.Set("username", claims["username"])
 
 		c.Next()
 	}
