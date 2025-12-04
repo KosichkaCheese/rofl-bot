@@ -1,5 +1,28 @@
+definitions:
+  domain.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+    type: object
+  domain.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  domain.SuccessResponse:
+    properties:
+      message:
+        type: string
+    type: object
 info:
   contact: {}
+  description: API для tg Mini App "Приколы у Алёны"
+  title: Rofl Bot API
+  version: "1.0"
 paths:
   /alena-rofl/:
     get:
@@ -10,15 +33,11 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/domain.SuccessResponse'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/domain.ErrorResponse'
       summary: Проверка жизнеспособности сервера
   /alena-rofl/auth:
     post:
@@ -41,16 +60,41 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/domain.AuthResponse'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/domain.ErrorResponse'
       summary: Авторизация через Telegram
+      tags:
+      - auth
+  /alena-rofl/clear:
+    delete:
+      consumes:
+      - application/json
+      description: Удаление всех refresh токенов пользователя
+      parameters:
+      - description: User ID
+        in: body
+        name: user_id
+        required: true
+        schema:
+          properties:
+            user_id:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Удаление токенов
       tags:
       - auth
   /alena-rofl/refresh:
@@ -58,7 +102,7 @@ paths:
       consumes:
       - application/json
       description: После истечения access токена использовать это. принимает refresh
-        токен, отдает новый access. Пока не работает!!
+        токен, отдает новый access.
       parameters:
       - description: Refresh Token
         in: body
@@ -75,21 +119,15 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/domain.AuthResponse'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/domain.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/domain.ErrorResponse'
       summary: Обновление токена
       tags:
       - auth
@@ -102,18 +140,20 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/domain.SuccessResponse'
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/domain.ErrorResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: Тест авторизации
       tags:
       - auth
+securityDefinitions:
+  BearerAuth:
+    description: Введите "Bearer {access_token}" (без кавычек)
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
