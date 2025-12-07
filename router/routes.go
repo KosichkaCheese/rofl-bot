@@ -41,7 +41,7 @@ func UserCheck(c *gin.Context) {
 	})
 }
 
-func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl) *gin.Engine {
+func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *controller.UserCtrl, eventCtrl *controller.EventCtrl) *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.Default()) //потом поставить middleware
 	api := router.Group("/alena-rofl")
@@ -51,6 +51,20 @@ func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl) *gin.Engine 
 		api.POST("/auth", authCtrl.Auth)
 		api.POST("/refresh", authCtrl.Refresh)
 		api.DELETE("/clear", authCtrl.ClearTokens)
+
+		api.GET("/user/:id", service.AuthMiddleware(cfg), userCtrl.GetUser)
+		api.PUT("/user", service.AuthMiddleware(cfg), userCtrl.UpdateUser)
+		api.DELETE("/user/:id", service.AuthMiddleware(cfg), userCtrl.DeleteUser)
+
+		api.GET("/event/:id", service.AuthMiddleware(cfg), eventCtrl.GetEvent)
+		api.GET("/events", service.AuthMiddleware(cfg), eventCtrl.GetUserEvents)
+		api.GET("/event/:id/admin", service.AuthMiddleware(cfg), eventCtrl.GetEventAdmin)
+		api.POST("/event", service.AuthMiddleware(cfg), eventCtrl.CreateEvent)
+		api.PUT("/event", service.AuthMiddleware(cfg), eventCtrl.UpdateEvent)
+		api.DELETE("/event/:id", service.AuthMiddleware(cfg), eventCtrl.DeleteEvent)
+		api.PUT("/event/:id/join", service.AuthMiddleware(cfg), eventCtrl.JoinEvent)
+		api.PUT("/event/:id/leave", service.AuthMiddleware(cfg), eventCtrl.LeaveEvent)
+		api.GET("/event/:id/members", service.AuthMiddleware(cfg), eventCtrl.GetEventMembers)
 	}
 
 	return router

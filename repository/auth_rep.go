@@ -30,8 +30,7 @@ func (r *AuthRep) CreateToken(token *domain.Token, username string) error {
 		if e != nil {
 			return e
 		}
-	}
-	if err != nil {
+	} else if err != nil {
 		return err
 	}
 

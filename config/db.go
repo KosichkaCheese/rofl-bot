@@ -3,6 +3,7 @@ package config
 import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 
 	"log"
@@ -35,6 +36,9 @@ func InitDB(cfg *Config) {
 	log.Println("Migrating database...")
 
 	DB.AutoMigrate(&domain.User{}, &domain.Token{}, &domain.Event{}, &domain.Role{}, &domain.EventMember{}, &domain.Product{}, &domain.ProductMember{})
+
+	DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&domain.Role{Id: 1, Name: "admin"})
+	DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&domain.Role{Id: 2, Name: "user"})
 
 	log.Println("Database migrated")
 }

@@ -8,14 +8,121 @@ definitions:
       refresh_token:
         type: string
     type: object
+  domain.CreateEvent:
+    properties:
+      name:
+        type: string
+    type: object
   domain.ErrorResponse:
     properties:
       error:
         type: string
     type: object
+  domain.Event:
+    properties:
+      createdAt:
+        type: string
+      ended:
+        type: boolean
+      id:
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/domain.EventMember'
+        type: array
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  domain.EventMember:
+    properties:
+      event:
+        $ref: '#/definitions/domain.Event'
+      event_id:
+        type: integer
+      id:
+        type: integer
+      role:
+        $ref: '#/definitions/domain.Role'
+      role_id:
+        type: integer
+      user:
+        $ref: '#/definitions/domain.User'
+      user_id:
+        type: integer
+    type: object
+  domain.Role:
+    properties:
+      id:
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/domain.EventMember'
+        type: array
+      name:
+        type: string
+    type: object
   domain.SuccessResponse:
     properties:
       message:
+        type: string
+    type: object
+  domain.Token:
+    properties:
+      createdAt:
+        type: string
+      expires_in:
+        type: string
+      refresh:
+        type: string
+      revoke:
+        type: boolean
+      updatedAt:
+        type: string
+      user:
+        $ref: '#/definitions/domain.User'
+      user_id:
+        type: integer
+    type: object
+  domain.UpdateEvent:
+    properties:
+      ended:
+        type: boolean
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  domain.UpdateUser:
+    properties:
+      bank:
+        description: Id          uint    `json:"id" gorm:"primaryKey;not null;unique"`
+        type: string
+      phone_number:
+        type: string
+    type: object
+  domain.User:
+    properties:
+      bank:
+        type: string
+      createdAt:
+        type: string
+      events:
+        items:
+          $ref: '#/definitions/domain.EventMember'
+        type: array
+      id:
+        type: integer
+      phone_number:
+        type: string
+      tokens:
+        items:
+          $ref: '#/definitions/domain.Token'
+        type: array
+      updatedAt:
+        type: string
+      username:
         type: string
     type: object
 info:
@@ -97,6 +204,361 @@ paths:
       summary: Удаление токенов
       tags:
       - auth
+  /alena-rofl/event:
+    post:
+      consumes:
+      - application/json
+      description: Создает событие, при успехе возвращает id. авторизованный пользователь
+        становится админом события.
+      parameters:
+      - description: Event
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создание события
+      tags:
+      - event
+    put:
+      consumes:
+      - application/json
+      description: Можно изменить название или завершенность. оба параметра необязательны.
+        !Изменить событие может только его админ!
+      parameters:
+      - description: Event
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновление события
+      tags:
+      - event
+  /alena-rofl/event/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: по id удаляет событие. !Удалить событие может только его админ!
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удаление события
+      tags:
+      - event
+    get:
+      consumes:
+      - application/json
+      description: по id выдает событие. !не работает, если запрашивает не участник
+        ивента!
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Event'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение события
+      tags:
+      - event
+  /alena-rofl/event/{id}/admin:
+    get:
+      consumes:
+      - application/json
+      description: по id события выдает админа. !не работает, если запрашивает не
+        участник ивента!
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение админа события
+      tags:
+      - event
+  /alena-rofl/event/{id}/join:
+    put:
+      consumes:
+      - application/json
+      description: по id ивента присоединяет к нему авторизованного пользователя.
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Присоединиться к ивенту.
+      tags:
+      - event
+  /alena-rofl/event/{id}/leave:
+    put:
+      consumes:
+      - application/json
+      description: по id ивента удаляет из него авторизованного пользователя. !не
+        работает, если пользователь не участник ивента!
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Покинуть ивент
+      tags:
+      - event
+  /alena-rofl/event/{id}/members:
+    get:
+      consumes:
+      - application/json
+      description: по id ивента получает всех участников !не работает, если пользователь
+        не участник ивента!
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.User'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение участников ивента
+      tags:
+      - event
+  /alena-rofl/events:
+    get:
+      consumes:
+      - application/json
+      description: выдает все ивенты авторизованного пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Event'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение всех ивентов текущего юзера
+      tags:
+      - event
   /alena-rofl/refresh:
     post:
       consumes:
@@ -131,6 +593,116 @@ paths:
       summary: Обновление токена
       tags:
       - auth
+  /alena-rofl/user:
+    put:
+      consumes:
+      - application/json
+      description: принимает id, название банка и номер телефона (банк и номер не
+        обязательны)
+      parameters:
+      - description: user
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновление данных пользователя
+      tags:
+      - user
+  /alena-rofl/user/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: принимает id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удаление пользователя
+      tags:
+      - user
+    get:
+      consumes:
+      - application/json
+      description: по id выдает пользоватля
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение пользователя
+      tags:
+      - user
   /alena-rofl/user_check:
     get:
       description: Доступ будет только при успешной авторизации
