@@ -90,8 +90,7 @@ func (a *AuthService) GenerateAccessToken(userID uint, username string) (string,
 	claims := jwt.MapClaims{
 		"user_id":  userID,
 		"username": username,
-		// "exp":     time.Now().Add(time.Hour * 24).Unix(),
-		"exp": time.Now().Add(time.Minute * 3).Unix(), //для тестов
+		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -142,7 +141,7 @@ func (a *AuthService) GenerateRefreshToken(userID uint, username string) (string
 		Refresh:   hex.EncodeToString(hash.Sum(nil)),
 		UserId:    userID,
 		Revoked:   false,
-		ExpiresIn: time.Now().Add(time.Minute * 10)}
+		ExpiresIn: time.Now().Add(time.Hour * 24 * 30)}
 
 	_, err := a.repo.GetTokenByUserId(userID)
 	if err != nil {
@@ -204,7 +203,7 @@ func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", claims["user_id"])
+		c.Set("user_id", uint(claims["user_id"].(float64)))
 		c.Set("username", claims["username"])
 
 		c.Next()

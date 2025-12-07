@@ -81,3 +81,26 @@ type ProductMember struct {
 	User    User    `gorm:"foreignKey:user_id;references:id"`
 	Product Product `gorm:"foreignKey:product_id;references:id"`
 }
+
+type UpdateUser struct {
+	// Id          uint    `json:"id" gorm:"primaryKey;not null;unique"`
+	Bank        *string `json:"bank"`
+	PhoneNumber *string `json:"phone_number"`
+}
+
+type CreateEvent struct {
+	Name string `json:"name"`
+}
+
+type UpdateEvent struct {
+	Id    uint    `json:"id" gorm:"primaryKey;not null;unique"`
+	Name  *string `json:"name"`
+	Ended *bool   `json:"ended" gorm:"default:false"`
+}
+
+type EventMembers struct {
+	UserID   uint   `json:"user_id"`
+	Username string `json:"username"`
+	RoleID   uint   `json:"role_id"`
+	RoleName string `json:"role_name"`
+}

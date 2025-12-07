@@ -62,7 +62,7 @@ func (a *AuthCtrl) Auth(c *gin.Context) {
 	c.JSON(200, domain.AuthResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		ExpiresIn:    180,
+		ExpiresIn:    86400,
 	})
 }
 
