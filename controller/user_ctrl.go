@@ -124,3 +124,21 @@ func (u *UserCtrl) DeleteUser(c *gin.Context) {
 
 	c.JSON(200, domain.SuccessResponse{Message: "User deleted."})
 }
+
+// @Summary Получение собственного id
+// @Description отдает id авторизованного пользователя
+// @Tags user
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} domain.SuccessResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Router /alena-rofl/user/whoami [get]
+func (u *UserCtrl) SelfID(c *gin.Context) {
+	id, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, domain.ErrorResponse{Error: "Unauthorized or can't find user_id in context."})
+		return
+	}
+	c.JSON(200, id.(uint))
+}

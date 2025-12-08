@@ -714,6 +714,27 @@ paths:
       summary: Получение пользователя
       tags:
       - user
+  /alena-rofl/user/whoami:
+    get:
+      consumes:
+      - application/json
+      description: отдает id авторизованного пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение собственного id
+      tags:
+      - user
   /alena-rofl/user_check:
     get:
       description: Доступ будет только при успешной авторизации
