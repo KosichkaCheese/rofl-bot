@@ -47,7 +47,8 @@ func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *co
 	router := gin.Default()
 	// router.Use(cors.Default()) //потом поставить middleware
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://tg-app-event-planner.vercel.app"},
+		// AllowOrigins:     []string{"https://tg-app-event-planner.vercel.app"},
+		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
