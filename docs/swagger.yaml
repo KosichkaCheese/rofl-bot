@@ -52,6 +52,17 @@ definitions:
       user_id:
         type: integer
     type: object
+  domain.EventMembers:
+    properties:
+      role_id:
+        type: integer
+      role_name:
+        type: string
+      user_id:
+        type: integer
+      username:
+        type: string
+    type: object
   domain.Role:
     properties:
       id:
@@ -501,7 +512,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/domain.User'
+              $ref: '#/definitions/domain.EventMembers'
             type: array
         "400":
           description: Bad Request

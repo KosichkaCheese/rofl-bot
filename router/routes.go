@@ -8,6 +8,8 @@ import (
 	"rofl-bot/controller"
 	"rofl-bot/domain"
 	"rofl-bot/service"
+
+	"time"
 )
 
 // @Summary Проверка жизнеспособности сервера
@@ -43,7 +45,15 @@ func UserCheck(c *gin.Context) {
 
 func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *controller.UserCtrl, eventCtrl *controller.EventCtrl) *gin.Engine {
 	router := gin.Default()
-	router.Use(cors.Default()) //потом поставить middleware
+	// router.Use(cors.Default()) //потом поставить middleware
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"https://tg-app-event-planner.vercel.app"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           0 * time.Hour,
+	}))
 	api := router.Group("/alena-rofl")
 	{
 		api.GET("/", HealthCheck)
