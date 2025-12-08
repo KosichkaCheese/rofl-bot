@@ -66,6 +66,7 @@ func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *co
 		api.GET("/user/:id", service.AuthMiddleware(cfg), userCtrl.GetUser)
 		api.PUT("/user", service.AuthMiddleware(cfg), userCtrl.UpdateUser)
 		api.DELETE("/user/:id", service.AuthMiddleware(cfg), userCtrl.DeleteUser)
+		api.GET("/user/whoami", service.AuthMiddleware(cfg), userCtrl.SelfID)
 
 		api.GET("/event/:id", service.AuthMiddleware(cfg), eventCtrl.GetEvent)
 		api.GET("/events", service.AuthMiddleware(cfg), eventCtrl.GetUserEvents)
