@@ -3,6 +3,7 @@ package repository
 import (
 	"rofl-bot/domain"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -36,18 +37,28 @@ func (r *EventRep) GetEventAdmin(id uint) (*domain.User, error) {
 	return &eventMember.User, err
 }
 
-func (r *EventRep) GetUserEvents(id uint) ([]domain.Event, error) {
-	var eventsMember []domain.EventMember
-	err := r.DB.Preload("Event").Where("user_id = ?", id).Find(&eventsMember).Error
+func (r *EventRep) GetUserEvents(id uint) ([]domain.EventWithMembersCount, error) {
+	var events []domain.EventWithMembersCount
+	err := r.DB.
+		Table("events").
+		Select(`
+			events.*,
+			COUNT(em_all.user_id) AS count
+		`).
+		Joins(`
+			JOIN event_members em_user 
+			ON em_user.event_id = events.id 
+			AND em_user.user_id = ?
+		`, id).
+		Joins(`
+			LEFT JOIN event_members em_all 
+			ON em_all.event_id = events.id
+		`).
+		Group("events.id").
+		Scan(&events).Error
+
 	if err != nil {
 		return nil, err
-	}
-
-	events := make([]domain.Event, 0, len(eventsMember))
-	for _, eventMember := range eventsMember {
-		if eventMember.Event.Id != 0 {
-			events = append(events, eventMember.Event)
-		}
 	}
 
 	return events, nil
@@ -91,4 +102,24 @@ func (r *EventRep) GetEventMembers(eventId uint) ([]domain.EventMembers, error) 
 	var eventMembers []domain.EventMembers
 	err := r.DB.Table("event_members em").Joins("JOIN roles r ON r.id = em.role_id").Joins("JOIN users u ON u.id = em.user_id").Select("u.id   AS user_id, u.username, r.id   AS role_id, r.name AS role_name").Where("event_id = ?", eventId).Find(&eventMembers).Error
 	return eventMembers, err
+}
+
+func (r *EventRep) CreateInvite(invite *domain.Invite) error {
+	return r.DB.Create(invite).Error
+}
+
+func (r *EventRep) GetInvite(id uuid.UUID) (*domain.Invite, error) {
+	var invite domain.Invite
+	err := r.DB.Where("id = ?", id).First(&invite).Error
+	return &invite, err
+}
+
+func (r *EventRep) GetInviteByEvent(eventId uint) (*domain.Invite, error) {
+	var invite domain.Invite
+	err := r.DB.Where("event_id = ?", eventId).First(&invite).Error
+	return &invite, err
+}
+
+func (r *EventRep) DeleteInvite(id uuid.UUID) error {
+	return r.DB.Where("id = ?", id).Delete(&domain.Invite{}).Error
 }

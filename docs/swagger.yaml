@@ -63,6 +63,20 @@ definitions:
       username:
         type: string
     type: object
+  domain.EventWithMembersCount:
+    properties:
+      count:
+        type: integer
+      event:
+        $ref: '#/definitions/domain.Event'
+    type: object
+  domain.InviteLink:
+    properties:
+      expires_at:
+        type: string
+      link:
+        type: string
+    type: object
   domain.Role:
     properties:
       id:
@@ -414,11 +428,13 @@ paths:
       summary: Получение админа события
       tags:
       - event
-  /alena-rofl/event/{id}/join:
-    put:
+  /alena-rofl/event/{id}/invite:
+    post:
       consumes:
       - application/json
-      description: по id ивента присоединяет к нему авторизованного пользователя.
+      description: Создает ссылку для приглашения в ивент с указанным id. не работает,
+        если пользователь не участник ивента. Ссылка живет 24 часа, при повторном
+        использовании старая ссылка заменяется на новую.
       parameters:
       - description: Event ID
         in: path
@@ -431,7 +447,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            $ref: '#/definitions/domain.InviteLink'
         "400":
           description: Bad Request
           schema:
@@ -450,7 +466,7 @@ paths:
             $ref: '#/definitions/domain.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Присоединиться к ивенту.
+      summary: Создание ссылки для приглашения
       tags:
       - event
   /alena-rofl/event/{id}/leave:
@@ -547,7 +563,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/domain.Event'
+              $ref: '#/definitions/domain.EventWithMembersCount'
             type: array
         "400":
           description: Bad Request
@@ -568,6 +584,46 @@ paths:
       security:
       - BearerAuth: []
       summary: Получение всех ивентов текущего юзера
+      tags:
+      - event
+  /alena-rofl/invite/{id}:
+    post:
+      consumes:
+      - application/json
+      description: по id invite-ссылки присоединяет авторизованного пользователя к
+        ивенту. не работает для пользователей, которые уже состоят в этом ивенте.
+      parameters:
+      - description: Invite ID (uuid)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Присоединиться к ивенту.
       tags:
       - event
   /alena-rofl/refresh:

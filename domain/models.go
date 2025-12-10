@@ -2,6 +2,8 @@ package domain
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -72,6 +74,14 @@ type Product struct {
 	Members  []ProductMember `gorm:"foreignKey:product_id;references:id"`
 }
 
+type Invite struct {
+	Id        uuid.UUID `json:"id" gorm:"primaryKey;not null;unique"`
+	EventId   uint      `json:"event_id" gorm:"not null;index"`
+	ExpiresAt time.Time `json:"expires_at"`
+
+	Event Event `gorm:"foreignKey:event_id;references:id"`
+}
+
 type ProductMember struct {
 	Id        uint    `json:"id" gorm:"primaryKey;autoIncrement;not null;unique"`
 	UserId    uint    `json:"user_id" gorm:"not null;index"`
@@ -103,4 +113,9 @@ type EventMembers struct {
 	Username string `json:"username"`
 	RoleID   uint   `json:"role_id"`
 	RoleName string `json:"role_name"`
+}
+
+type EventWithMembersCount struct {
+	Event `json:"event" gorm:"embedded"`
+	Count int `json:"count"`
 }
