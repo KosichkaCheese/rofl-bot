@@ -433,14 +433,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/alena-rofl/event/{id}/join": {
-            "put": {
+        "/alena-rofl/event/{id}/invite": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "по id ивента присоединяет к нему авторизованного пользователя.",
+                "description": "Создает ссылку для приглашения в ивент с указанным id. не работает, если пользователь не участник ивента. Ссылка живет 24 часа, при повторном использовании старая ссылка заменяется на новую.",
                 "consumes": [
                     "application/json"
                 ],
@@ -450,7 +450,7 @@ const docTemplate = `{
                 "tags": [
                     "event"
                 ],
-                "summary": "Присоединиться к ивенту.",
+                "summary": "Создание ссылки для приглашения",
                 "parameters": [
                     {
                         "type": "integer",
@@ -464,7 +464,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.SuccessResponse"
+                            "$ref": "#/definitions/domain.InviteLink"
                         }
                     },
                     "400": {
@@ -643,8 +643,69 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/domain.Event"
+                                "$ref": "#/definitions/domain.EventWithMembersCount"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/alena-rofl/invite/{id}": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "по id invite-ссылки присоединяет авторизованного пользователя к ивенту. не работает для пользователей, которые уже состоят в этом ивенте.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "event"
+                ],
+                "summary": "Присоединиться к ивенту.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invite ID (uuid)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.SuccessResponse"
                         }
                     },
                     "400": {
@@ -1058,6 +1119,28 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.EventWithMembersCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "event": {
+                    "$ref": "#/definitions/domain.Event"
+                }
+            }
+        },
+        "domain.InviteLink": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "link": {
                     "type": "string"
                 }
             }

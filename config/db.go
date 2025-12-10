@@ -35,7 +35,7 @@ func InitDB(cfg *Config) {
 	log.Println("Database connected")
 	log.Println("Migrating database...")
 
-	DB.AutoMigrate(&domain.User{}, &domain.Token{}, &domain.Event{}, &domain.Role{}, &domain.EventMember{}, &domain.Product{}, &domain.ProductMember{})
+	DB.AutoMigrate(&domain.User{}, &domain.Token{}, &domain.Event{}, &domain.Role{}, &domain.EventMember{}, &domain.Product{}, &domain.ProductMember{}, &domain.Invite{})
 
 	DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&domain.Role{Id: 1, Name: "admin"})
 	DB.Clauses(clause.OnConflict{DoNothing: true}).Create(&domain.Role{Id: 2, Name: "user"})

@@ -74,9 +74,10 @@ func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *co
 		api.POST("/event", service.AuthMiddleware(cfg), eventCtrl.CreateEvent)
 		api.PUT("/event", service.AuthMiddleware(cfg), eventCtrl.UpdateEvent)
 		api.DELETE("/event/:id", service.AuthMiddleware(cfg), eventCtrl.DeleteEvent)
-		api.PUT("/event/:id/join", service.AuthMiddleware(cfg), eventCtrl.JoinEvent)
+		api.POST("/invite/:id", service.AuthMiddleware(cfg), eventCtrl.JoinEvent)
 		api.PUT("/event/:id/leave", service.AuthMiddleware(cfg), eventCtrl.LeaveEvent)
 		api.GET("/event/:id/members", service.AuthMiddleware(cfg), eventCtrl.GetEventMembers)
+		api.POST("/event/:id/invite", service.AuthMiddleware(cfg), eventCtrl.CreateInvite)
 	}
 
 	return router

@@ -8,6 +8,7 @@ import (
 	"errors"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -118,7 +119,7 @@ func (ctrl *EventCtrl) GetEventAdmin(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Success 200 {object} []domain.Event
+// @Success 200 {object} []domain.EventWithMembersCount
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 404 {object} domain.ErrorResponse
@@ -268,28 +269,32 @@ func (ctrl *EventCtrl) DeleteEvent(c *gin.Context) {
 }
 
 // @Summary Присоединиться к ивенту.
-// @Description по id ивента присоединяет к нему авторизованного пользователя.
+// @Description по id invite-ссылки присоединяет авторизованного пользователя к ивенту. не работает для пользователей, которые уже состоят в этом ивенте.
 // @Tags event
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param id path uint true "Event ID"
+// @Param id path string true "Invite ID (uuid)"
 // @Success 200 {object} domain.SuccessResponse
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 404 {object} domain.ErrorResponse
 // @Failure 500 {object} domain.ErrorResponse
-// @Router /alena-rofl/event/{id}/join [put]
+// @Router /alena-rofl/invite/{id} [post]
 func (ctrl *EventCtrl) JoinEvent(c *gin.Context) {
 	var uri struct {
-		ID uint `uri:"id" binding:"required"`
+		ID string `uri:"id" binding:"required"`
 	}
 	if err := c.ShouldBindUri(&uri); err != nil {
 		c.JSON(400, domain.ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	event_id := uri.ID
+	invite_id, err := uuid.Parse(uri.ID)
+	if err != nil {
+		c.JSON(400, domain.ErrorResponse{Error: err.Error()})
+		return
+	}
 
 	user_id, exists := c.Get("user_id")
 	if !exists {
@@ -297,10 +302,10 @@ func (ctrl *EventCtrl) JoinEvent(c *gin.Context) {
 		return
 	}
 
-	err := ctrl.service.JoinEvent(user_id.(uint), event_id)
+	err = ctrl.service.JoinEvent(user_id.(uint), invite_id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(404, domain.ErrorResponse{Error: err.Error()})
+			c.JSON(404, domain.ErrorResponse{Error: "Invite is invalid"})
 			return
 		}
 		c.JSON(500, domain.ErrorResponse{Error: err.Error()})
@@ -402,4 +407,51 @@ func (ctrl *EventCtrl) GetEventMembers(c *gin.Context) {
 	}
 
 	c.JSON(200, members)
+}
+
+// @Summary Создание ссылки для приглашения
+// @Description Создает ссылку для приглашения в ивент с указанным id. не работает, если пользователь не участник ивента. Ссылка живет 24 часа, при повторном использовании старая ссылка заменяется на новую.
+// @Tags event
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path uint true "Event ID"
+// @Success 200 {object} domain.InviteLink
+// @Failure 400 {object} domain.ErrorResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Failure 404 {object} domain.ErrorResponse
+// @Failure 500 {object} domain.ErrorResponse
+// @Router /alena-rofl/event/{id}/invite [post]
+func (ctrl *EventCtrl) CreateInvite(c *gin.Context) {
+	var uri struct {
+		ID uint `uri:"id" binding:"required"`
+	}
+	if err := c.ShouldBindUri(&uri); err != nil {
+		c.JSON(400, domain.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	event_id := uri.ID
+
+	user_id, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, domain.ErrorResponse{Error: "Unauthorized or can't find user_id in context."})
+		return
+	}
+
+	link, err := ctrl.service.CreateInvite(user_id.(uint), event_id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(404, domain.ErrorResponse{Error: err.Error()})
+			return
+		}
+		if err.Error() == "user is not member of this event" {
+			c.JSON(400, domain.ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(500, domain.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(200, link)
 }
