@@ -3,7 +3,6 @@ package controller
 import (
 	"rofl-bot/domain"
 	"rofl-bot/service"
-	"strconv"
 
 	"errors"
 
@@ -152,7 +151,7 @@ func (ctrl *EventCtrl) GetUserEvents(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param event body domain.CreateEvent true "Event"
-// @Success 200 {object} domain.SuccessResponse
+// @Success 200 {object} uint
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 404 {object} domain.ErrorResponse
@@ -182,7 +181,7 @@ func (ctrl *EventCtrl) CreateEvent(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, domain.SuccessResponse{Message: "Event created. Event ID: " + strconv.Itoa(int(event_id))})
+	c.JSON(200, event_id)
 }
 
 // @Summary Обновление события
