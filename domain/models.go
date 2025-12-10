@@ -38,6 +38,7 @@ type Event struct {
 
 	Members  []EventMember `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
 	Products []Product     `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
+	Invites  []Invite      `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
 }
 
 type Role struct {
