@@ -162,7 +162,7 @@ func (s *EventService) CreateInvite(user_id, event_id uint) (*domain.InviteLink,
 	}
 
 	return &domain.InviteLink{
-		Link:      "https://alena-rofl-bot.onrender.com/alena-rofl/invite/" + invite.Id.String(),
+		Link:      "https://t.me/event_planner_vlrtnrt_bot?startapp=" + invite.Id.String(),
 		ExpiresAt: invite.ExpiresAt,
 	}, nil
 
