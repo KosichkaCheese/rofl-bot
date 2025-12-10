@@ -15,7 +15,7 @@ type User struct {
 	UpdatedAt   time.Time
 
 	Tokens []Token       `gorm:"foreignKey:user_id;references:id;constraint:OnDelete:CASCADE"`
-	Events []EventMember `gorm:"foreignKey:user_id;references:id"`
+	Events []EventMember `gorm:"foreignKey:user_id;references:id;constraint:OnDelete:CASCADE"`
 }
 
 type Token struct {
@@ -36,7 +36,8 @@ type Event struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Members []EventMember `gorm:"foreignKey:event_id;references:id"`
+	Members  []EventMember `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
+	Products []Product     `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
 }
 
 type Role struct {
@@ -71,7 +72,7 @@ type Product struct {
 
 	Event    Event           `gorm:"foreignKey:event_id;references:id"`
 	Consumer User            `gorm:"foreignKey:consumer_id;references:id"`
-	Members  []ProductMember `gorm:"foreignKey:product_id;references:id"`
+	Members  []ProductMember `gorm:"foreignKey:product_id;references:id;constraint:OnDelete:CASCADE"`
 }
 
 type Invite struct {
