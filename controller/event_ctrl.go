@@ -26,7 +26,7 @@ func NewEventCtrl(service *service.EventService) *EventCtrl {
 // @Accept json
 // @Produce json
 // @Param id path uint true "Event ID"
-// @Success 200 {object} domain.Event
+// @Success 200 {object} domain.EventWithAdmin
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 401 {object} domain.ErrorResponse
 // @Failure 404 {object} domain.ErrorResponse

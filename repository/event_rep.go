@@ -31,6 +31,24 @@ func (r *EventRep) GetEvent(id uint) (*domain.Event, error) {
 	return &event, err
 }
 
+func (r *EventRep) GetEventWithCount(id uint) (*domain.EventWithMembersCount, error) {
+	var event domain.EventWithMembersCount
+	err := r.DB.
+		Table("events").
+		Select(`
+			events.*,
+			COUNT(em_all.user_id) AS count
+		`).
+		Joins(`
+			LEFT JOIN event_members em_all 
+			ON em_all.event_id = events.id
+		`).
+		Where("events.id = ?", id).
+		Group("events.id").
+		Scan(&event).Error
+	return &event, err
+}
+
 func (r *EventRep) GetEventAdmin(id uint) (*domain.User, error) {
 	var eventMember domain.EventMember
 	err := r.DB.Preload("User").Where("event_id = ? and role_id = ?", id, 1).First(&eventMember).Error
@@ -43,7 +61,7 @@ func (r *EventRep) GetUserEvents(id uint) ([]domain.EventWithMembersCount, error
 		Table("events").
 		Select(`
 			events.*,
-			COUNT(em_all.user_id) AS count
+			COUNT(DISTINCT em_all.user_id) AS count
 		`).
 		Joins(`
 			JOIN event_members em_user 

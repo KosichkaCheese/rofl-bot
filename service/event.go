@@ -18,7 +18,7 @@ func NewEventService(rep *repository.EventRep) *EventService {
 	return &EventService{rep: rep}
 }
 
-func (s *EventService) GetEvent(user_id uint, event_id uint) (*domain.Event, error) {
+func (s *EventService) GetEvent(user_id uint, event_id uint) (*domain.EventWithAdmin, error) {
 	isMember, err := s.rep.CheckMember(event_id, user_id)
 	if err != nil && err.Error() != "record not found" {
 		return nil, err
@@ -26,7 +26,15 @@ func (s *EventService) GetEvent(user_id uint, event_id uint) (*domain.Event, err
 	if !isMember {
 		return nil, errors.New("user is not member of this event")
 	}
-	return s.rep.GetEvent(event_id)
+	event, err := s.rep.GetEventWithCount(event_id)
+	if err != nil {
+		return nil, err
+	}
+	admin, err := s.rep.CheckAdmin(event_id, user_id)
+	if err != nil {
+		return nil, err
+	}
+	return &domain.EventWithAdmin{Event: *event, IsAdmin: admin}, nil
 }
 
 func (s *EventService) GetEventAdmin(event_id uint, user_id uint) (*domain.User, error) {

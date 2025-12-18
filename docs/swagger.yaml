@@ -26,12 +26,20 @@ definitions:
         type: boolean
       id:
         type: integer
+      invites:
+        items:
+          $ref: '#/definitions/domain.Invite'
+        type: array
       members:
         items:
           $ref: '#/definitions/domain.EventMember'
         type: array
       name:
         type: string
+      products:
+        items:
+          $ref: '#/definitions/domain.Product'
+        type: array
       updatedAt:
         type: string
     type: object
@@ -63,6 +71,13 @@ definitions:
       username:
         type: string
     type: object
+  domain.EventWithAdmin:
+    properties:
+      event:
+        $ref: '#/definitions/domain.EventWithMembersCount'
+      is_admin:
+        type: boolean
+    type: object
   domain.EventWithMembersCount:
     properties:
       count:
@@ -70,12 +85,69 @@ definitions:
       event:
         $ref: '#/definitions/domain.Event'
     type: object
+  domain.Invite:
+    properties:
+      event:
+        $ref: '#/definitions/domain.Event'
+      event_id:
+        type: integer
+      expires_at:
+        type: string
+      id:
+        type: string
+    type: object
   domain.InviteLink:
     properties:
       expires_at:
         type: string
       link:
         type: string
+    type: object
+  domain.Product:
+    properties:
+      amount:
+        type: integer
+      bought:
+        type: boolean
+      consumer:
+        $ref: '#/definitions/domain.User'
+      consumer_id:
+        type: integer
+      createdAt:
+        type: string
+      equal:
+        type: boolean
+      event:
+        $ref: '#/definitions/domain.Event'
+      event_id:
+        type: integer
+      id:
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/domain.ProductMember'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+      updatedAt:
+        type: string
+    type: object
+  domain.ProductMember:
+    properties:
+      amount:
+        type: number
+      id:
+        type: integer
+      product:
+        $ref: '#/definitions/domain.Product'
+      product_id:
+        type: integer
+      user:
+        $ref: '#/definitions/domain.User'
+      user_id:
+        type: integer
     type: object
   domain.Role:
     properties:
@@ -248,7 +320,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.SuccessResponse'
+            type: integer
         "400":
           description: Bad Request
           schema:
@@ -366,7 +438,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/domain.Event'
+            $ref: '#/definitions/domain.EventWithAdmin'
         "400":
           description: Bad Request
           schema:

@@ -222,7 +222,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.SuccessResponse"
+                            "type": "integer"
                         }
                     },
                     "400": {
@@ -283,7 +283,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/domain.Event"
+                            "$ref": "#/definitions/domain.EventWithAdmin"
                         }
                     },
                     "400": {
@@ -1066,6 +1066,12 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "invites": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Invite"
+                    }
+                },
                 "members": {
                     "type": "array",
                     "items": {
@@ -1074,6 +1080,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "products": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Product"
+                    }
                 },
                 "updatedAt": {
                     "type": "string"
@@ -1123,6 +1135,17 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.EventWithAdmin": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/domain.EventWithMembersCount"
+                },
+                "is_admin": {
+                    "type": "boolean"
+                }
+            }
+        },
         "domain.EventWithMembersCount": {
             "type": "object",
             "properties": {
@@ -1134,6 +1157,23 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.Invite": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/domain.Event"
+                },
+                "event_id": {
+                    "type": "integer"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "domain.InviteLink": {
             "type": "object",
             "properties": {
@@ -1142,6 +1182,76 @@ const docTemplate = `{
                 },
                 "link": {
                     "type": "string"
+                }
+            }
+        },
+        "domain.Product": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "bought": {
+                    "type": "boolean"
+                },
+                "consumer": {
+                    "$ref": "#/definitions/domain.User"
+                },
+                "consumer_id": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "equal": {
+                    "type": "boolean"
+                },
+                "event": {
+                    "$ref": "#/definitions/domain.Event"
+                },
+                "event_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.ProductMember"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.ProductMember": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "product": {
+                    "$ref": "#/definitions/domain.Product"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "user": {
+                    "$ref": "#/definitions/domain.User"
+                },
+                "user_id": {
+                    "type": "integer"
                 }
             }
         },
