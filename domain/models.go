@@ -121,3 +121,8 @@ type EventWithMembersCount struct {
 	Event `json:"event" gorm:"embedded"`
 	Count int `json:"count"`
 }
+
+type EventWithAdmin struct {
+	Event   EventWithMembersCount `json:"event" gorm:"embedded"`
+	IsAdmin bool                  `json:"is_admin"`
+}
