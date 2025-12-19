@@ -45,7 +45,11 @@ func main() {
 	eventService := service.NewEventService(eventRep)
 	eventCtrl := controller.NewEventCtrl(eventService)
 
-	r := router.SetupRouter(cfg, authCtrl, userCtrl, eventCtrl)
+	productRep := repository.NewProductRep(config.DB)
+	productService := service.NewProductService(productRep)
+	productCtrl := controller.NewProductCtrl(productService)
+
+	r := router.SetupRouter(cfg, authCtrl, userCtrl, eventCtrl, productCtrl)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Run(":8000")
 }

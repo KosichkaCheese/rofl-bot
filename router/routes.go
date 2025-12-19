@@ -43,7 +43,7 @@ func UserCheck(c *gin.Context) {
 	})
 }
 
-func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *controller.UserCtrl, eventCtrl *controller.EventCtrl) *gin.Engine {
+func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *controller.UserCtrl, eventCtrl *controller.EventCtrl, productCtrl *controller.ProductCtrl) *gin.Engine {
 	router := gin.Default()
 	// router.Use(cors.Default()) //потом поставить middleware
 	router.Use(cors.New(cors.Config{
@@ -82,6 +82,12 @@ func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *co
 		api.PUT("/event/:id/leave", service.AuthMiddleware(cfg), eventCtrl.LeaveEvent)
 		api.GET("/event/:id/members", service.AuthMiddleware(cfg), eventCtrl.GetEventMembers)
 		api.POST("/event/:id/invite", service.AuthMiddleware(cfg), eventCtrl.CreateInvite)
+
+		api.GET("/event/:id/product/:product_id", service.AuthMiddleware(cfg), productCtrl.GetProduct)
+		api.GET("/event/:id/products", service.AuthMiddleware(cfg), productCtrl.GetProductsByEvent)
+		api.POST("/event/:id/product", service.AuthMiddleware(cfg), productCtrl.CreateProduct)
+		api.DELETE("/event/:id/product/:product_id", service.AuthMiddleware(cfg), productCtrl.DeleteProduct)
+		api.PUT("/event/:id/product/:product_id", service.AuthMiddleware(cfg), productCtrl.UpdateProduct)
 	}
 
 	return router

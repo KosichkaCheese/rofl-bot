@@ -14,8 +14,8 @@ type User struct {
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 
-	Tokens []Token       `gorm:"foreignKey:user_id;references:id;constraint:OnDelete:CASCADE"`
-	Events []EventMember `gorm:"foreignKey:user_id;references:id;constraint:OnDelete:CASCADE"`
+	Tokens []Token       `json:"-" gorm:"foreignKey:user_id;references:id;constraint:OnDelete:CASCADE"`
+	Events []EventMember `json:"-" gorm:"foreignKey:user_id;references:id;constraint:OnDelete:CASCADE"`
 }
 
 type Token struct {
@@ -64,16 +64,15 @@ type Product struct {
 	Name       string  `json:"name"`
 	EventId    uint    `json:"event_id" gorm:"not null;index"`
 	ConsumerId uint    `json:"consumer_id" gorm:"not null"`
-	Amount     uint    `json:"amount" gorm:"default:0"`
 	Price      float64 `json:"price" gorm:"default:0"`
 	Bought     bool    `json:"bought" gorm:"default:false"`
 	Equal      bool    `json:"equal" gorm:"default:true"`
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 
-	Event    Event           `gorm:"foreignKey:event_id;references:id"`
-	Consumer User            `gorm:"foreignKey:consumer_id;references:id"`
-	Members  []ProductMember `gorm:"foreignKey:product_id;references:id;constraint:OnDelete:CASCADE"`
+	Event    Event           `json:"-" gorm:"foreignKey:EventId;references:Id"`
+	Consumer User            `json:"-" gorm:"foreignKey:ConsumerId;references:Id"`
+	Members  []ProductMember `gorm:"foreignKey:ProductId;references:Id;constraint:OnDelete:CASCADE"`
 }
 
 type Invite struct {
@@ -90,8 +89,8 @@ type ProductMember struct {
 	ProductId uint    `json:"product_id" gorm:"not null;index"`
 	Price     float64 `json:"amount" gorm:"default:0"`
 
-	User    User    `gorm:"foreignKey:user_id;references:id"`
-	Product Product `gorm:"foreignKey:product_id;references:id"`
+	User    User    `gorm:"foreignKey:UserId;references:Id"`
+	Product Product `json:"-" gorm:"foreignKey:ProductId;references:Id"`
 }
 
 type UpdateUser struct {
@@ -125,4 +124,56 @@ type EventWithMembersCount struct {
 type EventWithAdmin struct {
 	Event   EventWithMembersCount `json:"event" gorm:"embedded"`
 	IsAdmin bool                  `json:"is_admin"`
+}
+
+type ProductList struct {
+	Id    uint    `json:"id"`
+	Name  string  `json:"name"`
+	Price float64 `json:"price"`
+	Count int     `json:"count"`
+}
+
+type CreateProductMembers struct {
+	UserId uint     `json:"user_id"`
+	Price  *float64 `json:"price,omitempty"`
+}
+
+type CreateProduct struct {
+	Name       string  `json:"name"`
+	ConsumerId uint    `json:"consumer_id"`
+	Price      float64 `json:"price"`
+	Bought     bool    `json:"bought"`
+	Equal      bool    `json:"equal"`
+
+	Members []CreateProductMembers `json:"members"`
+}
+
+type ProductResponse struct {
+	Id               uint                    `json:"id"`
+	Name             string                  `json:"name"`
+	Price            float64                 `json:"price"`
+	Bought           bool                    `json:"bought"`
+	Equal            bool                    `json:"equal"`
+	ConsumerId       uint                    `json:"consumer_id"`
+	ConsumerUsername string                  `json:"consumer_username"`
+	Members          []ProductMemberResponse `json:"members"`
+}
+
+type ProductMemberResponse struct {
+	UserId   uint    `json:"user_id"`
+	Username string  `json:"username"`
+	Price    float64 `json:"price"`
+}
+
+type UpdateProduct struct {
+	Name    string                `json:"name"`
+	Price   float64               `json:"price"`
+	Bought  bool                  `json:"bought"`
+	Equal   bool                  `json:"equal"`
+	Members []UpdateProductMember `json:"members"`
+}
+
+type UpdateProductMember struct {
+	UserId uint     `json:"user_id"`
+	Price  *float64 `json:"price,omitempty"`
 }
