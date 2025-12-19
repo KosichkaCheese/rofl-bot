@@ -13,6 +13,30 @@ definitions:
       name:
         type: string
     type: object
+  domain.CreateProduct:
+    properties:
+      bought:
+        type: boolean
+      consumer_id:
+        type: integer
+      equal:
+        type: boolean
+      members:
+        items:
+          $ref: '#/definitions/domain.CreateProductMembers'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  domain.CreateProductMembers:
+    properties:
+      price:
+        type: number
+      user_id:
+        type: integer
+    type: object
   domain.ErrorResponse:
     properties:
       error:
@@ -105,20 +129,14 @@ definitions:
     type: object
   domain.Product:
     properties:
-      amount:
-        type: integer
       bought:
         type: boolean
-      consumer:
-        $ref: '#/definitions/domain.User'
       consumer_id:
         type: integer
       createdAt:
         type: string
       equal:
         type: boolean
-      event:
-        $ref: '#/definitions/domain.Event'
       event_id:
         type: integer
       id:
@@ -134,20 +152,59 @@ definitions:
       updatedAt:
         type: string
     type: object
+  domain.ProductList:
+    properties:
+      count:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: number
+    type: object
   domain.ProductMember:
     properties:
       amount:
         type: number
       id:
         type: integer
-      product:
-        $ref: '#/definitions/domain.Product'
       product_id:
         type: integer
       user:
         $ref: '#/definitions/domain.User'
       user_id:
         type: integer
+    type: object
+  domain.ProductMemberResponse:
+    properties:
+      price:
+        type: number
+      user_id:
+        type: integer
+      username:
+        type: string
+    type: object
+  domain.ProductResponse:
+    properties:
+      bought:
+        type: boolean
+      consumer_id:
+        type: integer
+      consumer_username:
+        type: string
+      equal:
+        type: boolean
+      id:
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/domain.ProductMemberResponse'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
     type: object
   domain.Role:
     properties:
@@ -165,23 +222,6 @@ definitions:
       message:
         type: string
     type: object
-  domain.Token:
-    properties:
-      createdAt:
-        type: string
-      expires_in:
-        type: string
-      refresh:
-        type: string
-      revoke:
-        type: boolean
-      updatedAt:
-        type: string
-      user:
-        $ref: '#/definitions/domain.User'
-      user_id:
-        type: integer
-    type: object
   domain.UpdateEvent:
     properties:
       ended:
@@ -190,6 +230,28 @@ definitions:
         type: integer
       name:
         type: string
+    type: object
+  domain.UpdateProduct:
+    properties:
+      bought:
+        type: boolean
+      equal:
+        type: boolean
+      members:
+        items:
+          $ref: '#/definitions/domain.UpdateProductMember'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  domain.UpdateProductMember:
+    properties:
+      price:
+        type: number
+      user_id:
+        type: integer
     type: object
   domain.UpdateUser:
     properties:
@@ -205,18 +267,10 @@ definitions:
         type: string
       createdAt:
         type: string
-      events:
-        items:
-          $ref: '#/definitions/domain.EventMember'
-        type: array
       id:
         type: integer
       phone_number:
         type: string
-      tokens:
-        items:
-          $ref: '#/definitions/domain.Token'
-        type: array
       updatedAt:
         type: string
       username:
@@ -382,6 +436,145 @@ paths:
       summary: Обновление события
       tags:
       - event
+  /alena-rofl/event/{event_id}/product/{product_id}:
+    delete:
+      consumes:
+      - application/json
+      description: по id ивента и товара удаляет товар. !не работает, если запрашивает
+        не админ ивента!
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удаление товара
+      tags:
+      - product
+    get:
+      consumes:
+      - application/json
+      description: по id ивента и товара выдает товар. !не работает, если запрашивает
+        не участник ивента!
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ProductResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение товара
+      tags:
+      - product
+    put:
+      consumes:
+      - application/json
+      description: по id ивента и товара обновляет товар. !не работает, если запрашивает
+        не участник ивента!
+      parameters:
+      - description: Event ID
+        in: path
+        name: event_id
+        required: true
+        type: integer
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Product
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateProduct'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновление товара
+      tags:
+      - product
   /alena-rofl/event/{id}:
     delete:
       consumes:
@@ -623,6 +816,94 @@ paths:
       summary: Получение участников ивента
       tags:
       - event
+  /alena-rofl/event/{id}/product:
+    post:
+      consumes:
+      - application/json
+      description: Создает товар, при успехе возвращает id. Не работает, если создает
+        не участнк события.
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Product
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CreateProduct'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создание товара
+      tags:
+      - product
+  /alena-rofl/event/{id}/products:
+    get:
+      consumes:
+      - application/json
+      description: выдает все товары по id ивента. не работает, если пользователь
+        не участник ивента
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.ProductList'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение всех товаров в ивенте
+      tags:
+      - product
   /alena-rofl/events:
     get:
       consumes:
