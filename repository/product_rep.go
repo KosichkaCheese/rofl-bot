@@ -84,7 +84,7 @@ func (r *ProductRep) GetProduct(id uint) (*domain.Product, error) {
 }
 
 func (r *ProductRep) GetProductsByEvent(eventId uint) ([]domain.ProductList, error) {
-	var products []domain.ProductList
+	products := make([]domain.ProductList, 0)
 	err := r.DB.
 		Table("products").
 		Select(`products.id, products.name, products.price, COUNT(DISTINCT pm.user_id) AS count`).

@@ -56,7 +56,7 @@ func (r *EventRep) GetEventAdmin(id uint) (*domain.User, error) {
 }
 
 func (r *EventRep) GetUserEvents(id uint) ([]domain.EventWithMembersCount, error) {
-	var events []domain.EventWithMembersCount
+	events := make([]domain.EventWithMembersCount, 0)
 	err := r.DB.
 		Table("events").
 		Select(`
@@ -117,7 +117,7 @@ func (r *EventRep) JoinEvent(eventId uint, userId uint) error {
 }
 
 func (r *EventRep) GetEventMembers(eventId uint) ([]domain.EventMembers, error) {
-	var eventMembers []domain.EventMembers
+	eventMembers := make([]domain.EventMembers, 0)
 	err := r.DB.Table("event_members em").Joins("JOIN roles r ON r.id = em.role_id").Joins("JOIN users u ON u.id = em.user_id").Select("u.id   AS user_id, u.username, r.id   AS role_id, r.name AS role_name").Where("event_id = ?", eventId).Find(&eventMembers).Error
 	return eventMembers, err
 }
