@@ -642,6 +642,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/alena-rofl/event/{id}/bill": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Выдает счет пользователя по id ивента. В счет не входят товары, которые купил сам пользователь",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "product"
+                ],
+                "summary": "Получение счета для текущего пользователя",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.Bill"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/alena-rofl/event/{id}/invite": {
             "post": {
                 "security": [
@@ -1381,6 +1445,32 @@ const docTemplate = `{
                 }
             }
         },
+        "domain.Bill": {
+            "type": "object",
+            "properties": {
+                "consumer_bank": {
+                    "type": "string"
+                },
+                "consumer_id": {
+                    "type": "integer"
+                },
+                "consumer_name": {
+                    "type": "string"
+                },
+                "consumer_phone": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "domain.CreateEvent": {
             "type": "object",
             "properties": {
@@ -1730,6 +1820,9 @@ const docTemplate = `{
             "properties": {
                 "bought": {
                     "type": "boolean"
+                },
+                "consumer_id": {
+                    "type": "integer"
                 },
                 "equal": {
                     "type": "boolean"

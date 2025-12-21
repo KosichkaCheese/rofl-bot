@@ -8,6 +8,23 @@ definitions:
       refresh_token:
         type: string
     type: object
+  domain.Bill:
+    properties:
+      consumer_bank:
+        type: string
+      consumer_id:
+        type: integer
+      consumer_name:
+        type: string
+      consumer_phone:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      product_id:
+        type: integer
+    type: object
   domain.CreateEvent:
     properties:
       name:
@@ -235,6 +252,8 @@ definitions:
     properties:
       bought:
         type: boolean
+      consumer_id:
+        type: integer
       equal:
         type: boolean
       members:
@@ -693,6 +712,48 @@ paths:
       summary: Получение админа события
       tags:
       - event
+  /alena-rofl/event/{id}/bill:
+    get:
+      consumes:
+      - application/json
+      description: Выдает счет пользователя по id ивента. В счет не входят товары,
+        которые купил сам пользователь
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Bill'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение счета для текущего пользователя
+      tags:
+      - product
   /alena-rofl/event/{id}/invite:
     post:
       consumes:

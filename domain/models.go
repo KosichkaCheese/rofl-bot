@@ -140,7 +140,7 @@ type CreateProductMembers struct {
 
 type CreateProduct struct {
 	Name       string  `json:"name"`
-	ConsumerId uint    `json:"consumer_id"`
+	ConsumerId *uint   `json:"consumer_id"`
 	Price      float64 `json:"price"`
 	Bought     bool    `json:"bought"`
 	Equal      bool    `json:"equal"`
@@ -166,14 +166,25 @@ type ProductMemberResponse struct {
 }
 
 type UpdateProduct struct {
-	Name    string                `json:"name"`
-	Price   float64               `json:"price"`
-	Bought  bool                  `json:"bought"`
-	Equal   bool                  `json:"equal"`
-	Members []UpdateProductMember `json:"members"`
+	Name       string                `json:"name"`
+	ConsumerId *uint                 `json:"consumer_id"`
+	Price      float64               `json:"price"`
+	Bought     bool                  `json:"bought"`
+	Equal      bool                  `json:"equal"`
+	Members    []UpdateProductMember `json:"members"`
 }
 
 type UpdateProductMember struct {
 	UserId uint     `json:"user_id"`
 	Price  *float64 `json:"price,omitempty"`
+}
+
+type Bill struct {
+	ProductId uint    `json:"product_id"`
+	Name      string  `json:"name"`
+	Price     float64 `json:"price"`
+	CId       uint    `json:"consumer_id"`
+	CName     string  `json:"consumer_name"`
+	CPhone    string  `json:"consumer_phone"`
+	CBank     string  `json:"consumer_bank"`
 }

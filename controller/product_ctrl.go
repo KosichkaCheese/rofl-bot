@@ -64,6 +64,9 @@ func (ctrl *ProductCtrl) CreateProduct(c *gin.Context) {
 		if err.Error() == "user is not member of this event" {
 			c.JSON(400, domain.ErrorResponse{Error: err.Error()})
 			return
+		} else if err.Error() == "consumer is not member of this event" {
+			c.JSON(400, domain.ErrorResponse{Error: err.Error()})
+			return
 		}
 		c.JSON(500, domain.ErrorResponse{Error: err.Error()})
 		return
@@ -128,7 +131,7 @@ func (ctrl *ProductCtrl) GetProduct(c *gin.Context) {
 // @Security BearerAuth
 // @Accept json
 // @Produce json
-// @Param id path uint true "Event ID"s
+// @Param id path uint true "Event ID"
 // @Success 200 {object} []domain.ProductList
 // @Failure 400 {object} domain.ErrorResponse
 // @Failure 401 {object} domain.ErrorResponse
@@ -271,10 +274,58 @@ func (ctrl *ProductCtrl) UpdateProduct(c *gin.Context) {
 		} else if err.Error() == "sum of member prices must be equal to product price" {
 			c.JSON(400, domain.ErrorResponse{Error: err.Error()})
 			return
+		} else if err.Error() == "consumer is not member of this event" {
+			c.JSON(400, domain.ErrorResponse{Error: err.Error()})
+			return
 		}
 		c.JSON(500, domain.ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	c.JSON(200, domain.SuccessResponse{Message: "Product updated."})
+}
+
+// @Summary Получение счета для текущего пользователя
+// @Description Выдает счет пользователя по id ивента. В счет не входят товары, которые купил сам пользователь
+// @Tags product
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path uint true "Event ID"
+// @Success 200 {object} []domain.Bill
+// @Failure 400 {object} domain.ErrorResponse
+// @Failure 401 {object} domain.ErrorResponse
+// @Failure 404 {object} domain.ErrorResponse
+// @Failure 500 {object} domain.ErrorResponse
+// @Router /alena-rofl/event/{id}/bill [get]
+func (ctrl *ProductCtrl) GetUserBill(c *gin.Context) {
+	var uri struct {
+		EventID uint `uri:"id" binding:"required"`
+	}
+	if err := c.ShouldBindUri(&uri); err != nil {
+		c.JSON(400, domain.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	event_id := uri.EventID
+	user_id, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, domain.ErrorResponse{Error: "Unauthorized or can't find user_id in context."})
+		return
+	}
+
+	bill, err := ctrl.service.GetUserBill(event_id, user_id.(uint))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(404, domain.ErrorResponse{Error: err.Error()})
+			return
+		} else if err.Error() == "user is not member of this event" {
+			c.JSON(400, domain.ErrorResponse{Error: err.Error()})
+			return
+		}
+		c.JSON(500, domain.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	c.JSON(200, bill)
 }
