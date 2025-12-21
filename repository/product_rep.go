@@ -23,7 +23,7 @@ func (r *ProductRep) CreateProduct(eventId uint, product *domain.CreateProduct) 
 			EventId:    eventId,
 			Name:       product.Name,
 			Price:      product.Price,
-			ConsumerId: product.ConsumerId,
+			ConsumerId: *product.ConsumerId,
 			Bought:     product.Bought,
 			Equal:      product.Equal,
 		}
@@ -125,6 +125,7 @@ func (r *ProductRep) UpdateProduct(id uint, newProduct *domain.UpdateProduct) er
 		}
 
 		product.Name = newProduct.Name
+		product.ConsumerId = *newProduct.ConsumerId
 		product.Price = newProduct.Price
 		product.Bought = newProduct.Bought
 		product.Equal = newProduct.Equal
@@ -189,4 +190,18 @@ func (r *ProductRep) UpdateProduct(id uint, newProduct *domain.UpdateProduct) er
 
 		return nil
 	})
+}
+
+func (r *ProductRep) GetUserBill(eventId, userId uint) ([]domain.Bill, error) {
+	var bills []domain.Bill = make([]domain.Bill, 0)
+
+	err := r.DB.
+		Table("products").Preload("Consumer").
+		Select(`products.id as product_id, products.name as name, SUM(pm.price) as price, u.id as c_id, u.username as c_name, u.phone_number as c_phone, u.bank as c_bank`).
+		Joins("LEFT JOIN product_members pm ON pm.product_id = products.id").
+		Joins("LEFT JOIN users u ON u.id = products.consumer_id").
+		Where("products.event_id = ? and pm.user_id = ? and u.id != ?", eventId, userId, userId).
+		Group("products.id, u.id").
+		Scan(&bills).Error
+	return bills, err
 }

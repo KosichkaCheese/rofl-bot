@@ -23,6 +23,18 @@ func (s *ProductService) CreateProduct(eventId, userId uint, product *domain.Cre
 		return 0, errors.New("user is not member of this event")
 	}
 
+	if product.ConsumerId == nil || *product.ConsumerId == 0 {
+		product.ConsumerId = &userId
+	}
+
+	isMember, err = s.rep.CheckMember(eventId, *product.ConsumerId)
+	if err != nil && err.Error() != "record not found" {
+		return 0, err
+	}
+	if !isMember {
+		return 0, errors.New("consumer is not member of this event")
+	}
+
 	id, err := s.rep.CreateProduct(eventId, product)
 	if err != nil {
 		return 0, err
@@ -108,5 +120,29 @@ func (s *ProductService) UpdateProduct(eventId, userId, productId uint, product 
 		}
 	}
 
+	if product.ConsumerId == nil || *product.ConsumerId == 0 {
+		product.ConsumerId = &userId
+	}
+
+	isMember, err = s.rep.CheckMember(eventId, *product.ConsumerId)
+	if err != nil && err.Error() != "record not found" {
+		return err
+	}
+	if !isMember {
+		return errors.New("consumer is not member of this event")
+	}
+
 	return s.rep.UpdateProduct(productId, product)
+}
+
+func (s *ProductService) GetUserBill(eventId, userId uint) ([]domain.Bill, error) {
+	isMember, err := s.rep.CheckMember(eventId, userId)
+	if err != nil && err.Error() != "record not found" {
+		return nil, err
+	}
+	if !isMember {
+		return nil, errors.New("user is not member of this event")
+	}
+
+	return s.rep.GetUserBill(eventId, userId)
 }

@@ -45,14 +45,12 @@ func UserCheck(c *gin.Context) {
 
 func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *controller.UserCtrl, eventCtrl *controller.EventCtrl, productCtrl *controller.ProductCtrl) *gin.Engine {
 	router := gin.Default()
-	// router.Use(cors.Default()) //потом поставить middleware
 	router.Use(cors.New(cors.Config{
 		// AllowOrigins:     []string{"https://tg-app-event-planner.vercel.app"},
 		AllowAllOrigins: true,
 		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:    []string{"Origin", "Content-Type", "Authorization"},
-		// AllowCredentials: true,
-		MaxAge: 0 * time.Hour,
+		MaxAge:          24 * time.Hour,
 	}))
 
 	router.OPTIONS("/*path", func(c *gin.Context) {
@@ -88,6 +86,7 @@ func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *co
 		api.POST("/event/:id/product", service.AuthMiddleware(cfg), productCtrl.CreateProduct)
 		api.DELETE("/event/:id/product/:product_id", service.AuthMiddleware(cfg), productCtrl.DeleteProduct)
 		api.PUT("/event/:id/product/:product_id", service.AuthMiddleware(cfg), productCtrl.UpdateProduct)
+		api.GET("/event/:id/bill", service.AuthMiddleware(cfg), productCtrl.GetUserBill)
 	}
 
 	return router
