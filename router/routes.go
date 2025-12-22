@@ -46,11 +46,10 @@ func UserCheck(c *gin.Context) {
 func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *controller.UserCtrl, eventCtrl *controller.EventCtrl, productCtrl *controller.ProductCtrl) *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		// AllowOrigins:     []string{"https://tg-app-event-planner.vercel.app"},
-		AllowAllOrigins: true,
-		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:    []string{"Origin", "Content-Type", "Authorization"},
-		MaxAge:          24 * time.Hour,
+		AllowOrigins: []string{"https://tg-app-event-planner.vercel.app"},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+		MaxAge:       24 * time.Hour,
 	}))
 
 	router.OPTIONS("/*path", func(c *gin.Context) {
