@@ -87,7 +87,7 @@ func (r *ProductRep) GetProductsByEvent(eventId uint) ([]domain.ProductList, err
 	products := make([]domain.ProductList, 0)
 	err := r.DB.
 		Table("products").
-		Select(`products.id, products.name, products.price, COUNT(DISTINCT pm.user_id) AS count`).
+		Select(`products.id, products.name, products.price, COUNT(DISTINCT pm.user_id) AS count, products.bought`).
 		Joins("LEFT JOIN product_members pm ON pm.product_id = products.id").
 		Where("products.event_id = ?", eventId).
 		Group("products.id").

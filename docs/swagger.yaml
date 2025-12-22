@@ -171,6 +171,8 @@ definitions:
     type: object
   domain.ProductList:
     properties:
+      bought:
+        type: boolean
       count:
         type: integer
       id:
