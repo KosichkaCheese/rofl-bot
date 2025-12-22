@@ -127,10 +127,11 @@ type EventWithAdmin struct {
 }
 
 type ProductList struct {
-	Id    uint    `json:"id"`
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
-	Count int     `json:"count"`
+	Id     uint    `json:"id"`
+	Name   string  `json:"name"`
+	Price  float64 `json:"price"`
+	Count  int     `json:"count"`
+	Bought bool    `json:"bought"`
 }
 
 type CreateProductMembers struct {

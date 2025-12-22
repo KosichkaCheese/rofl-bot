@@ -1696,6 +1696,9 @@ const docTemplate = `{
         "domain.ProductList": {
             "type": "object",
             "properties": {
+                "bought": {
+                    "type": "boolean"
+                },
                 "count": {
                     "type": "integer"
                 },
