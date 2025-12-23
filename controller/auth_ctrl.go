@@ -46,6 +46,9 @@ func (a *AuthCtrl) Auth(c *gin.Context) {
 	}
 
 	username := userData["username"].(string)
+	if username == "" {
+		username = "Guest"
+	}
 	userID := userData["id"].(float64)
 	accessToken, err := a.service.GenerateAccessToken(uint(userID), username)
 	if err != nil {

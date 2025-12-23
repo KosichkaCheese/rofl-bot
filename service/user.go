@@ -18,6 +18,9 @@ func (s *UserService) GetUser(id uint) (*domain.User, error) {
 }
 
 func (s *UserService) CreateUser(user *domain.User) error {
+	if user.Username == "" {
+		user.Username = "Guest"
+	}
 	return s.rep.CreateUser(user)
 }
 
