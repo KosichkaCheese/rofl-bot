@@ -49,7 +49,7 @@ func (s *EventService) GetEventAdmin(event_id uint, user_id uint) (*domain.User,
 }
 
 func (s *EventService) CreateEvent(user_id uint, event *domain.CreateEvent) (uint, error) {
-	new_event := &domain.Event{Name: event.Name}
+	new_event := &domain.Event{Name: event.Name, StartsAt: event.StartsAt}
 	return s.rep.CreateEvent(user_id, new_event)
 }
 
@@ -110,8 +110,20 @@ func (s *EventService) UpdateEvent(user_id uint, event *domain.UpdateEvent) erro
 	if event.Ended != nil {
 		currEvent.Ended = *event.Ended
 	}
+	startsAtChanged := event.StartsAt != nil &&
+		(currEvent.StartsAt == nil || !currEvent.StartsAt.Equal(*event.StartsAt))
+	if startsAtChanged {
+		currEvent.StartsAt = event.StartsAt
+	}
 
-	return s.rep.UpdateEvent(currEvent)
+	if err := s.rep.UpdateEvent(currEvent); err != nil {
+		return err
+	}
+	if startsAtChanged {
+		// Чтобы бот снова напомнил о событии уже по новой дате.
+		return s.rep.DeleteReminders(event.Id)
+	}
+	return nil
 }
 
 func (s *EventService) DeleteEvent(user_id, event_id uint) error {
@@ -147,6 +159,11 @@ func (s *EventService) CreateInvite(user_id, event_id uint) (*domain.InviteLink,
 		return nil, errors.New("user is not member of this event")
 	}
 
+	return s.IssueInvite(event_id)
+}
+
+// Заменяет пригласительную ссылку события на новую, без проверки прав.
+func (s *EventService) IssueInvite(event_id uint) (*domain.InviteLink, error) {
 	currInvite, err := s.rep.GetInviteByEvent(event_id)
 	if err != nil && err.Error() != "record not found" {
 		return nil, err

@@ -30,15 +30,25 @@ type Token struct {
 }
 
 type Event struct {
-	Id        uint   `json:"id" gorm:"primaryKey;autoIncrement;not null;unique"`
-	Name      string `json:"name"`
-	Ended     bool   `json:"ended" gorm:"default:false"`
+	Id        uint       `json:"id" gorm:"primaryKey;autoIncrement;not null;unique"`
+	Name      string     `json:"name"`
+	Ended     bool       `json:"ended" gorm:"default:false"`
+	StartsAt  *time.Time `json:"starts_at" gorm:"index:events_reminder_idx,where:chat_id IS NOT NULL"` // nil — без даты
+	ChatId    *int64     `json:"chat_id" gorm:"index"`                                                 // чат, где событие создал бот; nil — из мини-аппа
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Members  []EventMember `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
-	Products []Product     `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
-	Invites  []Invite      `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
+	Members   []EventMember   `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
+	Products  []Product       `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
+	Invites   []Invite        `gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
+	Reminders []EventReminder `json:"-" gorm:"foreignKey:event_id;references:id;constraint:OnDelete:CASCADE"`
+}
+
+// Отправленное ботом напоминание: по строке на событие и окно (24 или 3 часа).
+type EventReminder struct {
+	EventId     uint      `gorm:"primaryKey;autoIncrement:false"`
+	WindowHours int       `gorm:"primaryKey;autoIncrement:false"`
+	SentAt      time.Time `gorm:"not null;default:now()"`
 }
 
 type Role struct {
@@ -100,13 +110,15 @@ type UpdateUser struct {
 }
 
 type CreateEvent struct {
-	Name string `json:"name"`
+	Name     string     `json:"name"`
+	StartsAt *time.Time `json:"starts_at"`
 }
 
 type UpdateEvent struct {
-	Id    uint    `json:"id" gorm:"primaryKey;not null;unique"`
-	Name  *string `json:"name"`
-	Ended *bool   `json:"ended" gorm:"default:false"`
+	Id       uint       `json:"id" gorm:"primaryKey;not null;unique"`
+	Name     *string    `json:"name"`
+	Ended    *bool      `json:"ended" gorm:"default:false"`
+	StartsAt *time.Time `json:"starts_at"`
 }
 
 type EventMembers struct {

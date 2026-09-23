@@ -86,6 +86,10 @@ func (r *EventRep) UpdateEvent(event *domain.Event) error {
 	return r.DB.Save(event).Error
 }
 
+func (r *EventRep) DeleteReminders(eventId uint) error {
+	return r.DB.Where("event_id = ?", eventId).Delete(&domain.EventReminder{}).Error
+}
+
 func (r *EventRep) CheckAdmin(eventId uint, userId uint) (bool, error) {
 	var eventMember domain.EventMember
 	err := r.DB.Preload("Role").Where("event_id = ? and user_id = ?", eventId, userId).First(&eventMember).Error

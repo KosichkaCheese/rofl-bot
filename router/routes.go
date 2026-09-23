@@ -43,7 +43,7 @@ func UserCheck(c *gin.Context) {
 	})
 }
 
-func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *controller.UserCtrl, eventCtrl *controller.EventCtrl, productCtrl *controller.ProductCtrl) *gin.Engine {
+func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *controller.UserCtrl, eventCtrl *controller.EventCtrl, productCtrl *controller.ProductCtrl, botCtrl *controller.BotCtrl) *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{"https://tg-app-event-planner.vercel.app"},
@@ -86,6 +86,18 @@ func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *co
 		api.DELETE("/event/:id/product/:product_id", service.AuthMiddleware(cfg), productCtrl.DeleteProduct)
 		api.PUT("/event/:id/product/:product_id", service.AuthMiddleware(cfg), productCtrl.UpdateProduct)
 		api.GET("/event/:id/bill", service.AuthMiddleware(cfg), productCtrl.GetUserBill)
+
+		// Сервисный API Telegram-бота.
+		bot := api.Group("/bot", service.BotAuthMiddleware(cfg))
+		{
+			bot.POST("/event", botCtrl.CreateEvent)
+			bot.GET("/event/:id", botCtrl.GetEvent)
+			bot.POST("/event/:id/join", botCtrl.JoinEvent)
+			bot.POST("/event/:id/invite", botCtrl.CreateInvite)
+			bot.GET("/events", botCtrl.GetChatEvents)
+			bot.POST("/reminders/claim", botCtrl.ClaimReminders)
+			bot.POST("/chat/migrate", botCtrl.MigrateChat)
+		}
 	}
 
 	return router
