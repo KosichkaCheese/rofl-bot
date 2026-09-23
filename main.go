@@ -22,6 +22,11 @@ import (
 // @name Authorization
 // @description Введите "Bearer {access_token}" (без кавычек)
 
+// @securityDefinitions.apikey BotSecret
+// @in header
+// @name X-Bot-Secret
+// @description Общий секрет с Telegram-ботом (BOT_API_SECRET)
+
 func main() {
 	log.Println("Starting alena rofls ...")
 
@@ -49,7 +54,11 @@ func main() {
 	productService := service.NewProductService(productRep)
 	productCtrl := controller.NewProductCtrl(productService)
 
-	r := router.SetupRouter(cfg, authCtrl, userCtrl, eventCtrl, productCtrl)
+	botRep := repository.NewBotRep(config.DB)
+	botService := service.NewBotService(botRep, eventService)
+	botCtrl := controller.NewBotCtrl(botService)
+
+	r := router.SetupRouter(cfg, authCtrl, userCtrl, eventCtrl, productCtrl, botCtrl)
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Run(":8000")
 }
