@@ -78,14 +78,23 @@ func (r *BotRep) GetEventMembers(eventIds []uint) (map[uint][]domain.BotEventMem
 }
 
 // Незавершённые события чата, которые ещё не начались: сначала ближайшие, без даты — в конце.
-func (r *BotRep) GetChatEvents(chatId int64) ([]domain.BotEvent, error) {
+// С adminId — только события, где этот пользователь администратор.
+func (r *BotRep) GetChatEvents(chatId int64, adminId *uint) ([]domain.BotEvent, error) {
 	events := make([]domain.BotEvent, 0)
-	err := r.DB.
+	query := r.DB.
 		Table("events").
 		Select("events.id, events.name, events.starts_at, COUNT(em.user_id) AS count").
 		Joins("LEFT JOIN event_members em ON em.event_id = events.id").
 		Where("events.chat_id = ? AND NOT events.ended", chatId).
-		Where("events.starts_at IS NULL OR events.starts_at > now()").
+		Where("events.starts_at IS NULL OR events.starts_at > now()")
+	if adminId != nil {
+		// Отдельный подзапрос, чтобы COUNT считал всех участников, а не только админа. role_id 1 — admin.
+		query = query.Where(
+			"EXISTS (SELECT 1 FROM event_members a WHERE a.event_id = events.id AND a.user_id = ? AND a.role_id = 1)",
+			*adminId,
+		)
+	}
+	err := query.
 		Group("events.id").
 		Order("events.starts_at ASC NULLS LAST, events.id").
 		Scan(&events).Error

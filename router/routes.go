@@ -94,6 +94,7 @@ func SetupRouter(cfg *config.Config, authCtrl *controller.AuthCtrl, userCtrl *co
 			bot.GET("/event/:id", botCtrl.GetEvent)
 			bot.POST("/event/:id/join", botCtrl.JoinEvent)
 			bot.POST("/event/:id/invite", botCtrl.CreateInvite)
+			bot.POST("/event/:id/delete", botCtrl.DeleteEvent)
 			bot.GET("/events", botCtrl.GetChatEvents)
 			bot.POST("/reminders/claim", botCtrl.ClaimReminders)
 			bot.POST("/chat/migrate", botCtrl.MigrateChat)

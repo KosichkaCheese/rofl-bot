@@ -13,7 +13,11 @@ import (
 )
 
 // Бот сравнивает текст ошибки дословно, чтобы показать пользователю понятное сообщение.
-var ErrAlreadyMember = errors.New("user is already member of this event")
+var (
+	ErrAlreadyMember = errors.New("user is already member of this event")
+	// Тот же текст, что у DELETE /event/{id} для мини-аппа.
+	ErrNotAdmin = errors.New("user is not admin of this event")
+)
 
 type BotService struct {
 	rep    *repository.BotRep
@@ -88,8 +92,8 @@ func (s *BotService) GetEvent(event_id uint) (*domain.BotEventDetails, error) {
 	return details, nil
 }
 
-func (s *BotService) GetChatEvents(chatId int64) ([]domain.BotEvent, error) {
-	events, err := s.rep.GetChatEvents(chatId)
+func (s *BotService) GetChatEvents(chatId int64, adminId *uint) ([]domain.BotEvent, error) {
+	events, err := s.rep.GetChatEvents(chatId, adminId)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +108,23 @@ func (s *BotService) CreateInvite(event_id uint) (*domain.InviteLink, error) {
 		return nil, err
 	}
 	return s.events.IssueInvite(event_id)
+}
+
+// Удалить может только админ события. Участники, покупки, приглашения и напоминания удаляются каскадом.
+func (s *BotService) DeleteEvent(event_id uint, user domain.BotUser) error {
+	if _, err := s.events.rep.GetEvent(event_id); err != nil {
+		return err
+	}
+
+	isAdmin, err := s.events.rep.CheckAdmin(event_id, user.Id)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if !isAdmin {
+		return ErrNotAdmin
+	}
+
+	return s.events.rep.DeleteEvent(event_id)
 }
 
 func (s *BotService) ClaimReminders(req *domain.BotClaimReminders) ([]domain.BotReminderEvent, error) {

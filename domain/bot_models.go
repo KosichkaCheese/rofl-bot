@@ -22,6 +22,10 @@ type BotJoinEvent struct {
 	User BotUser `json:"user"`
 }
 
+type BotDeleteEvent struct {
+	User BotUser `json:"user"`
+}
+
 type BotClaimReminders struct {
 	WindowHours int `json:"window_hours" binding:"required,gt=0"`
 	AfterHours  int `json:"after_hours" binding:"gte=0,ltfield=WindowHours"`
